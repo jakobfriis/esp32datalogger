@@ -1,13 +1,5 @@
+#include "defines.h"
 #include <WiFi.h>
-#define input 4
-#define analogIn 34
-#define led 2
-
-const char* ssid     = "ASUS";
-const char* password = "76TMQEGEWD";
-int val=0;
-int analogval=0;
-const char* host = "jdata.dk";
 
 void setup()
 {
@@ -15,13 +7,10 @@ void setup()
     delay(10);
     
     pinMode(led, OUTPUT);    
-    digitalWrite(led,HIGH);
-    pinMode(input, INPUT);  
+    pinMode(input0, INPUT);  
     
     // We start by connecting to a WiFi network
 
-    Serial.println();
-    Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
@@ -32,7 +21,6 @@ void setup()
         Serial.print(".");
     }
 
-    Serial.println("");
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
@@ -40,27 +28,24 @@ void setup()
 }
 
 void wifiReq(int sensorid, int val) {
-    Serial.print("connecting to ");
-    Serial.println(host);
-
-    // Use WiFiClient class to create TCP connections
     WiFiClient client;
     const int httpPort = 80;
     if (!client.connect(host, httpPort)) {
         Serial.println("connection failed");
         return;
     }
-    // We now create a URI for the request
+
     String url = "/datalogger/storedata.php";
-    url += "?unit=ff-ff-11-22-33-44&sensor=";
+    url += "?unit=ff-ff-ff-22-33-44&sensor=";
     url += sensorid;
     url += "&value=";
     url += val;
 
+    ledOn();
+  
     Serial.print("Requesting URL: ");
     Serial.println(url);
 
-    // This will send the request to the server
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
                  "Connection: close\r\n\r\n");
@@ -73,28 +58,35 @@ void wifiReq(int sensorid, int val) {
         }
     }
 
-    // Read all the lines of the reply from server and print them to Serial
     while(client.available()) {
         String line = client.readStringUntil('\r');
         //Serial.print(line);
     }
 
-    Serial.println();
-    Serial.println("closing connection");  
+    ledOff();  
 }
 
 void loop()
 {
-    val=digitalRead(input);
-    digitalWrite(led,val);
-    analogval=analogRead(analogIn);
+    val0=digitalRead(input0);
+    digitalWrite(led,val0);
+    val3=analogRead(input3);
     Serial.print("Analog val: ");
-    Serial.print(analogval);
+    Serial.print(val3);
     Serial.print(" Digital val: ");
-    Serial.println(val);
+    Serial.println(val0);
     
-    wifiReq(0,val);
+    wifiReq(0,val0);
     delay(1000);
-    wifiReq(1,analogval);
+    wifiReq(1,val3);
     delay(10000);
 }
+
+void ledOn() {
+      digitalWrite(led,HIGH);
+}
+
+void ledOff() {
+      digitalWrite(led,LOW);
+}
+
